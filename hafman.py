@@ -4,7 +4,6 @@ import sys
 import heapq
 
 
-		
 class Hafman(object):
 	"""Hafman archivator"""
 
@@ -19,7 +18,7 @@ class Hafman(object):
 
 		def __lt__(self, other):
 			return self.weight < other.weight
-	
+
 		def __str__(self):
 			return "w-{0} ch {1})".format(self.weight, self.ch)
 
@@ -27,8 +26,8 @@ class Hafman(object):
 			return self.left != None or self.right != None
 
 	bytes = None
-	freq_table =  {}
-	hafman_table = {} 
+	freq_table = {}
+	hafman_table = {}
 
 	def __init__(self, byteArray):
 		self.bytes = byteArray
@@ -53,7 +52,7 @@ class Hafman(object):
 				convert(tree.left, l.append(False))
 				convert(tree.right, l.append(True))
 			else:
-				hafman_table[tree.ch] = l 
+				hafman_table[tree.ch] = l
 
 		convert(tree[0], [])
 
@@ -82,50 +81,18 @@ class Hafman(object):
 			temp |= bit
 			step +=1
 
+		if step != 0:
+			while step != BITS_IN_BYTE:
+				temp <<= 1
+				step += 1
+			res.append(temp)
 		return res
 
 	def encode(self):
-		create_freq_tabl();
+		create_freq_tabl()
 		make_tree()
-
-def make_tree(str):	
-	raw_table = {}
-	for byte in str:
-		if byte in raw_table:
-			raw_table[byte] += 1
-		else:
-			raw_table[byte] = 1
-	
-	print(raw_table)
-	tree = [ Tree(v,k) for k, v in raw_table.items()]
-
-	heapq.heapify(tree)	
-
-	while len(tree) > 1:
-		left, right = heapq.heappop(tree), heapq.heappop(tree)
-		parent = Tree(left.weight  + right.weight, left=left, right = right)
-		heapq.heappush(tree, parent)	
-	return tree[0]
-
-def convert_to_table(tree):
-	def convert(tree, str):
-		if tree.hameChildren():
-			convert(tree.left, str + '0')
-			convert(tree.right, str + '1')
-		else:
-			table[tree.ch] = str
-		
-	table = {}
-	convert(tree, )
-	return table
-
-def encode(stream):
-	
-
-def main():
-	print(convert_to_table(make_tree("aaaaaaaaaaaaaaasssssddddddffffffggggggg")))
-	return 0
-
-if __name__ == '__main__':
-	sys.exit(main())
+		res = bytearray([len(self.freq_table)])
+		res.extend(encode_freq_table())
+		res.extend(encode_file())
+		return res
 
