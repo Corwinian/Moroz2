@@ -2,7 +2,7 @@
 
 import sys
 import heapq
-
+import functools
 
 BITS_IN_BYTE=8
 
@@ -35,8 +35,10 @@ class Hafman(object):
 		self.bytes = byteArray
 
 	def create_freq_table(self):
+		d =0
 		for byte in self.bytes:
-			if byte in self.freq_table:
+			d +=1
+			if byte in self.freq_table.keys():
 				self.freq_table[byte] += 1
 			else:
 				self.freq_table[byte] = 1
@@ -71,7 +73,6 @@ class Hafman(object):
 		bit_res = []
 		for byte in self.bytes:
 			bit_res.extend(self.hafman_table[byte])
-
 		step = 0
 		temp = 0
 		res = bytearray ([])
@@ -96,6 +97,46 @@ class Hafman(object):
 		self.make_tree()
 		res = bytearray([len(self.freq_table)])
 		res.extend(self.encode_freq_table())
+		t = len(res)
 		res.extend(self.encode_file())
 		return res
 
+	def load_freq_table(self, table_size):
+		raw_data = self.bytes[1:table_size*3+1]
+		i=0
+		file_size =0
+		while i + 2 < len(raw_data):
+			self.freq_table[raw_data[i]] = raw_data[i+1]* (2 **BITS_IN_BYTE) + raw_data[i+2]
+			file_size += self.freq_table[raw_data[i]]
+			i+=3
+
+		return file_size
+
+	def make_decode_tree(self):
+		self.make_tree()
+		to_str = lambda z:(functools.reduce( lambda x, y:  x + ('1' if y == True else '0' ), z,'' ))
+		return {to_str(v): k for k, v in self.hafman_table.items()}
+
+	def decode_data(self, file_size, table_size, decode_tree):
+		to_str = lambda z:(functools.reduce( lambda x, y:  x + ('1' if y == True else '0' ), z,'' ))
+		data = self.bytes[table_size*3+1:]
+		readed_byte = 0
+		key = ''
+		res = bytearray([])
+		while len(res) < file_size:
+			byte = data[readed_byte]
+			bits = [(byte >> i) % 2 != 0 for i in range(0,8)]
+			bits.reverse()
+
+			for bit in to_str(bits):
+				key += bit
+				if key in decode_tree.keys() and len(res) < file_size:
+					res.append(decode_tree[key])
+					key=''
+			readed_byte+=1
+		return res
+
+	def decode(self):
+		table_size = self.bytes[0]
+		file_size = self.load_freq_table(table_size)
+		return	self.decode_data(file_size,table_size, self.make_decode_tree())
