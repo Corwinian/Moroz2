@@ -4,6 +4,7 @@ import os
 import sys
 import optparse
 import hafman
+import lzw
 
 def parse_options():
 	parser = optparse.OptionParser(usage='archivaor.py [options]')
@@ -19,10 +20,7 @@ def main():
 	try:
 		fh = open(options.file, "rb")
 		data = fh.read()
-		ar = None
-
-		if options.archive == "hafman":
-			ar = hafman.Hafman(data)
+		ar = hafman.Hafman(data) if options.archive == "hafman" else lzw.LZW(data)
 
 		rh = open(options.output, "wb")
 		rh.write(ar.encode() if options.method == "code" else ar.decode())
