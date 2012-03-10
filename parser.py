@@ -7,7 +7,8 @@ import hafman
 
 def parse_options():
 	parser = optparse.OptionParser(usage='archivaor.py [options]')
-	parser.add_option('-a', '--archive', dest='archive', help='compress metod', metavar='FILE')
+	parser.add_option('-a', '--archive', dest='archive', help='compress metod', metavar='FILE', default= 'hafman')
+	parser.add_option('-m', '--method', dest='method', help='compress or decompress', metavar='FILE', default = 'decode')
 	parser.add_option('-f', '--file', dest='file', help='road to file to compress', metavar='FILE')
 	parser.add_option('-o', '--output', dest='output', help='road to output file', metavar='FILE')
 	return parser.parse_args()
@@ -22,10 +23,9 @@ def main():
 
 		if options.archive == "hafman":
 			ar = hafman.Hafman(data)
-		code_data = ar.encode()
 
 		rh = open(options.output, "wb")
-		rh.write(code_data)
+		rh.write(ar.encode() if options.method == "code" else ar.decode())
 	finally:
 		if fh != None:
 			fh.close()
