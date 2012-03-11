@@ -9,12 +9,19 @@ class LZW(object):
 	def encode (self):
 		dict_size = 256
 		dictionary = {}
+		print("firs bytes {0}".format(self.bytes[0:6]))
 		for i in range(256):
 			dictionary[i] = i
-		w = 0
+		w =0 
 		result = []
+
 		for c in self.bytes:
-			wc = w + c
+			wc = (w << 8) + c
+			if dict_size >= 65536: # wenn dictionary über 2**16 Einträge erreicht hat
+				dictionary = {} # leeren
+				for i in range(256): # neu initialisieren
+					dictionary[chr(i)] = i
+				dict_size = 256
 #			if dict_size >= 65536:
 #			for i in range(256):
 #				dictionary[chr(i)] = i
@@ -22,32 +29,16 @@ class LZW(object):
 			if wc in dictionary:
 				w = wc
 			else:
-				if dict_size < 4096:
-					dictionary[wc] = dict_size
-					dict_size += 1
+				dictionary[wc] = dict_size
+				dict_size += 1
 				result.append(dictionary[w])
-				w = 0 + c
+				w = c
 		result.append(dictionary[w])
 		res = bytearray([])
-		byte = 0
-		first = True
-		print("ar size - {0}".format(len(result)))
-		print("first byte - {0}".format(result[0]))
-		print("second byte - {0}".format(result[1]))
-		for ch in result:
-			if first:
-				if (ch // 2**4 ) > 255:
-					print ("ch - {0} // 2**4 {1}".format(ch, ch // 2**4))
-				res.append(ch // 2**4)
-				byte = ch % 2**4
-				first = False
-			else:
-				res.append((byte << 4) + ch // 2**8)
-				res.append(ch % 2**8)
-				byte = 0
-				first = True
-		if not first:
-				res.append((byte << 4))
+		for byte in result:
+			res.append(byte // 2**8)
+			res.append(byte % (2**8))
+
 		return res
 
 	def decode (self):
@@ -67,20 +58,34 @@ class LZW(object):
 				#print ("b - {0} byte {1}".format(b, byte) )
 				compressed.append((byte << 8) + b)
 				step =0
+
+		print("ar size - {0}".format(len(compressed)))
+		print("first byte - {0}".format(compressed[0]))
+		print("second byte - {0}".format(compressed[1]))
 		dictionary = {}
 		for i in range(256):
-			dictionary[i] = chr(i)
-		w = "" + chr(compressed.pop(0))
-		result = w
+			dictionary[i] = [i]
+		w = [compressed.pop(0)]
+		result = [w[0]] 
 		for k in compressed:
 			if k in dictionary:
 				entry = dictionary[k]
+#				print ("in dic")
 			elif k == dict_size:
-				entry = w + w[0]
+				w.append(w[0])
+				entry = w
 			else:
 				raise Exception("Bad compressed k: {0}".format(k))
-			result+= entry
-			dictionary[dict_size] = w + entry[0]
+#			print (k)
+#			print ("dic size {0}".format(dict_size))
+			result.extend(entry)
+			w.append(entry[0])
+		#	print("w - {0}".format(w) )
+			dictionary[dict_size] = w
 			dict_size += 1
+
 			w = entry
-		return bytearray([ord(t) for t in result])
+		print("end decompres" )
+		print("first byte - {0}".format(result[0]))
+		print("second byte - {0}".format(result[1]))
+		return bytearray(result)
