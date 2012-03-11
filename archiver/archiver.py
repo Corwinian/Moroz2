@@ -33,5 +33,5 @@ if __name__=="__main__":
 	try:
 		sys.exit(main())
 	except KeyboardInterrupt:
-		console.writeline('inerrupted by user')
+		print('inerrupted by user')
 	sys.exit(1)

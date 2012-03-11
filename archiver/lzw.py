@@ -20,7 +20,7 @@ class LZW(object):
 			if dict_size >= 65536: # wenn dictionary über 2**16 Einträge erreicht hat
 				dictionary = {} # leeren
 				for i in range(256): # neu initialisieren
-					dictionary[chr(i)] = i
+					dictionary[i] = i
 				dict_size = 256
 #			if dict_size >= 65536:
 #			for i in range(256):
@@ -46,18 +46,11 @@ class LZW(object):
 		byte = 0
 		step = 0
 		compressed = []
-		for b in self.bytes:
-			if step == 0:
-				byte = b
-				step += 1
-			elif step == 1:
-				step += 1
-				compressed.append((byte << 4) + (b // 2**4))
-				byte = b % 2**4
-			elif step == 2:
-				#print ("b - {0} byte {1}".format(b, byte) )
-				compressed.append((byte << 8) + b)
-				step =0
+
+		i =0
+		while (i+1 < len(self.bytes)):
+			compressed.append((self.bytes[i]<< 8) + self.bytes[i+1])
+			i+=2
 
 		print("ar size - {0}".format(len(compressed)))
 		print("first byte - {0}".format(compressed[0]))
@@ -65,26 +58,27 @@ class LZW(object):
 		dictionary = {}
 		for i in range(256):
 			dictionary[i] = [i]
+		dict_size = 256
+
 		w = [compressed.pop(0)]
-		result = [w[0]] 
+		result = [w[0]]
 		for k in compressed:
+			if len(dictionary) >= 65536:
+				dictionary = {}
+				for i in range(256):
+					dictionary[i] = [i]
+				dict_size = 256
 			if k in dictionary:
 				entry = dictionary[k]
-#				print ("in dic")
 			elif k == dict_size:
-				w.append(w[0])
-				entry = w
+				entry = w + [w[0]]
 			else:
 				raise Exception("Bad compressed k: {0}".format(k))
-#			print (k)
-#			print ("dic size {0}".format(dict_size))
-			result.extend(entry)
-			w.append(entry[0])
-		#	print("w - {0}".format(w) )
-			dictionary[dict_size] = w
+			result += entry
+			dictionary[dict_size] = w + [entry[0]]
 			dict_size += 1
-
 			w = entry
+		print("firs bytes {0}".format(self.bytes[0:6]))
 		print("end decompres" )
 		print("first byte - {0}".format(result[0]))
 		print("second byte - {0}".format(result[1]))
