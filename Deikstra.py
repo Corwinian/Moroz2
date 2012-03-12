@@ -46,12 +46,20 @@ def to_opz(posl):
 	return res
 
 def calc(opz):
-	while len(opz)!= 1:
-		op =opz.pop()
-		a = opz.pop()
-		b = opz.pop()
-		opz.append(eval("{0}{1}{2}".format(a,op,b)))
-	return opz.pop()
+	st = []
+	while len(opz) != 0:
+		if opz[0] in op.keys():
+			a = st.pop()
+			b = st.pop()
+			print("a - {0}".format(a))
+			print("b - {0}".format(b))
+			t =eval("{0}{1}{2}".format(b, opz.pop(0), a))
+			print("t - {0}".format(t))
+			opz.insert(0, t)
+			print(opz)
+		else:
+			st.append(opz.pop(0))
+	return st.pop()
 
 def main(argv):
 	print("expression - {0}".format(argv[1]))
